@@ -20,24 +20,33 @@
 
 #include "arduinoMFCC.h"
 
-arduinoMFCC::arduinoMFCC(int num_channels, int frame_size, int hop_size, int mfcc_size) {
+arduinoMFCC::arduinoMFCC(int num_channels, float* frame, int frame_size, int hop_size, int mfcc_size, int samplerate) {
     _num_channels = num_channels;
     _frame_size = frame_size;
     _hop_size = hop_size;
     _mfcc_size = mfcc_size;
+    _samplerate = samplerate;
 
     _frame = (float*)malloc(_frame_size * sizeof(float));
+    for (int i = 0; i < _frame_size; ++i) {
+        _frame[i] = frame[i];
+    }
     _hamming_window = (float*)malloc(_frame_size * sizeof(float));
     _mel_filter_bank = (float*)malloc(_num_channels * _frame_size * sizeof(float));
     _dct_matrix = (float*)malloc(_mfcc_size * _num_channels * sizeof(float));
     _mfcc_coeffs = (float*)malloc(_mfcc_size * sizeof(float)); 
 }
 
-void arduinoMFCC::compute() {
+float * arduinoMFCC::compute() {
     // ... code pour calculer les coefficients arduinoMFCC ...
+    create_hamming_window();
+    create_mel_filter_bank();
+    create_dct_matrix();
+
     apply_hamming_window();
     apply_mel_filter_bank();
     apply_dct();
+    return _mfcc_coeffs;
 }
 //////////////////////////////////////////////////////////////////////////
 // Fonction privée pour créer la fenêtre de Hamming
@@ -52,7 +61,7 @@ void arduinoMFCC::create_hamming_window() {
 // Fonction privée pour créer les filtres de Mel
 void arduinoMFCC::create_mel_filter_bank() {
     float mel_low_freq = 0;
-    float mel_high_freq = 2595 * log10(1 + (AUDIO_SAMPLE_RATE_EXACT / 2) / 700);
+    float mel_high_freq = 2595 * log10(1 + (_samplerate / 2) / 700);
     float mel_freq_delta = (mel_high_freq - mel_low_freq) / (_num_channels + 1);
     float* mel_f = (float*)malloc((_num_channels + 2) * sizeof(float));
 
@@ -129,6 +138,14 @@ void arduinoMFCC::apply_dct() {
         }
         _mfcc_coeffs[i] = sum;
     }
+}
+
+arduinoMFCC::~arduinoMFCC() {
+    free(_frame);
+    free(_hamming_window);
+    free(_mel_filter_bank);
+    free(_dct_matrix);
+    free(_mfcc_coeffs);
 }
 
 

@@ -26,10 +26,12 @@
 class arduinoMFCC {
 public:
     // Constructeur
-    arduinoMFCC(int num_channels, int frame_size, int hop_size, int mfcc_size, int samplerate);
+    arduinoMFCC(int num_channels, float* frame, int frame_size, int hop_size, int mfcc_size, int samplerate);
+    // dtor
+    ~arduinoMFCC();
 
     // Fonctions publiques
-    void compute();
+    float * compute();
     void apply_hamming_window();
     void apply_mel_filter_bank();
     void apply_dct();
@@ -44,6 +46,7 @@ private:
     int _frame_size;
     int _hop_size;
     int _mfcc_size;
+    int _samplerate;
     float* _frame;
     float* _hamming_window;
     float* _mel_filter_bank;
